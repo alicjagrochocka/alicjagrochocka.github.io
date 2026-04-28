@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Threat Intelligence: How Financial Institutions Track Adversaries | Alicja Grochocka-Dorocinska</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --dark-navy: #0a192f;
+            --navy: #112240;
+            --light-navy: #1d3557;
+            --lightest-navy: #233554;
+            --navy-shadow: rgba(2, 12, 27, 0.7);
+            --dark-slate: #495670;
+            --slate: #8892b0;
+            --light-slate: #a8b2d1;
+            --lightest-slate: #ccd6f6;
+            --white: #e6f1ff;
+            --green: #64ffda;
+            --green-tint: rgba(100, 255, 218, 0.1);
+            --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+            --font-sans: 'Space Mono', monospace;
+            --transition: all 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--dark-navy);
+            color: var(--slate);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: var(--navy); }
+        ::-webkit-scrollbar-thumb { background: var(--dark-slate); border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--slate); }
+
+        /* Nav */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: rgba(10, 25, 47, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 10px 30px -10px var(--navy-shadow);
+        }
+
+        .logo {
+            font-family: var(--font-mono);
+            font-size: 20px;
+            color: var(--green);
+            font-weight: 700;
+            letter-spacing: -1px;
+            text-decoration: none;
+        }
+
+        .back-link {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--lightest-slate);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .back-link:hover { color: var(--green); transform: translateX(-3px); }
+
+        /* Article */
+        .article-wrapper {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 140px 40px 100px;
+        }
+
+        .article-meta {
+            margin-bottom: 50px;
+        }
+
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .article-tag {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--green);
+            padding: 4px 12px;
+            border: 1px solid var(--green);
+            border-radius: 3px;
+        }
+
+        .article-title {
+            font-family: var(--font-mono);
+            font-size: clamp(26px, 4vw, 40px);
+            color: var(--lightest-slate);
+            line-height: 1.2;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .article-date {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--slate);
+        }
+
+        .article-divider {
+            width: 100%;
+            height: 1px;
+            background: var(--lightest-navy);
+            margin: 40px 0;
+        }
+
+        /* Content styles */
+        .article-body h2 {
+            font-family: var(--font-mono);
+            font-size: 22px;
+            color: var(--lightest-slate);
+            margin: 50px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--lightest-navy);
+        }
+
+        .article-body h2::before {
+            content: '// ';
+            color: var(--green);
+        }
+
+        .article-body h3 {
+            font-family: var(--font-mono);
+            font-size: 17px;
+            color: var(--light-slate);
+            margin: 35px 0 15px;
+        }
+
+        .article-body p {
+            margin-bottom: 20px;
+            line-height: 1.9;
+            font-size: 15px;
+        }
+
+        .article-body strong {
+            color: var(--lightest-slate);
+        }
+
+        .article-body ul, .article-body ol {
+            margin: 15px 0 20px 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .article-body li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 10px;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .article-body ul li::before {
+            content: '▹';
+            color: var(--green);
+            position: absolute;
+            left: 0;
+        }
+
+        .article-body ol {
+            counter-reset: list-counter;
+        }
+
+        .article-body ol li {
+            counter-increment: list-counter;
+        }
+
+        .article-body ol li::before {
+            content: counter(list-counter) ".";
+            color: var(--green);
+            position: absolute;
+            left: 0;
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        /* Callout box */
+        .callout {
+            background: var(--light-navy);
+            border-left: 3px solid var(--green);
+            padding: 20px 25px;
+            border-radius: 0 4px 4px 0;
+            margin: 25px 0;
+        }
+
+        .callout p {
+            margin-bottom: 0;
+            font-size: 14px;
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--navy);
+            border: 1px solid var(--lightest-navy);
+            border-radius: 4px;
+            padding: 20px 25px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--green);
+            line-height: 1.8;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 25px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--green);
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 2px solid var(--lightest-navy);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--lightest-navy);
+            color: var(--light-slate);
+            vertical-align: top;
+            line-height: 1.7;
+        }
+
+        tr:hover td {
+            background: var(--light-navy);
+        }
+
+        td:first-child {
+            color: var(--lightest-slate);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        /* Workflow steps */
+        .workflow {
+            margin: 25px 0;
+        }
+
+        .workflow-step {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: flex-start;
+        }
+
+        .step-num {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--green);
+            background: var(--green-tint);
+            border: 1px solid var(--green);
+            border-radius: 3px;
+            padding: 4px 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .step-content {
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        /* Tools grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tool-card {
+            background: var(--light-navy);
+            border: 1px solid var(--lightest-navy);
+            border-radius: 4px;
+            padding: 15px 18px;
+            transition: var(--transition);
+        }
+
+        .tool-card:hover {
+            border-color: var(--green);
+            transform: translateY(-2px);
+        }
+
+        .tool-name {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--lightest-slate);
+            margin-bottom: 6px;
+        }
+
+        .tool-desc {
+            font-size: 12px;
+            color: var(--slate);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .article-footer {
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 1px solid var(--lightest-navy);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: gap;
+            gap: 20px;
+        }
+
+        .article-footer a {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--green);
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .article-footer a:hover { opacity: 0.7; }
+
+        footer {
+            padding: 20px;
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--slate);
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 20px 25px; }
+            .article-wrapper { padding: 100px 25px 80px; }
+            .tools-grid { grid-template-columns: 1fr; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .article-wrapper { animation: fadeInUp 0.6s ease-out; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a href="index.html" class="logo">AG</a>
+    <a href="index.html#blog" class="back-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to writing
+    </a>
+</nav>
+
+<div class="article-wrapper">
+
+    <div class="article-meta">
+        <div class="article-tags">
+            <span class="article-tag">#ThreatIntelligence</span>
+            <span class="article-tag">#FinancialSecurity</span>
+            <span class="article-tag">#MITRE</span>
+        </div>
+        <h1 class="article-title">Cyber Threat Intelligence: How Financial Institutions Track Adversaries</h1>
+        <div class="article-date">April 28, 2026</div>
+    </div>
+
+    <div class="article-divider"></div>
+
+    <div class="article-body">
+
+        <p>
+            Most people assume cybersecurity is primarily a technical discipline — firewalls, patches, detection rules.
+            But inside a major financial institution, one of the most critical functions is something closer to
+            intelligence work than engineering. The Cyber Threat Analysis (CTA) team exists to answer a deceptively
+            simple question: <strong>which threats actually matter to us, right now?</strong>
+        </p>
+
+        <h2>What is threat intelligence — and what it isn't</h2>
+
+        <p>
+            Intelligence has a precise definition that matters here. It is the product of collection, processing,
+            integration, evaluation, analysis, and interpretation of available information. The key words are
+            <strong>analysis</strong> and <strong>assessment</strong>. Intelligence is a written document or brief
+            that <em>interprets information</em> to inform decisions that lead to an action.
+        </p>
+
+        <p>This means the following are <strong>not</strong> intelligence:</p>
+
+        <ul>
+            <li>Indicator of Compromise (IOC) feeds — these are data points</li>
+            <li>Raw logs — also data points</li>
+            <li>Any data or information presented without context</li>
+        </ul>
+
+        <div class="callout">
+            <p>
+                An IP address flagged in a feed tells you nothing by itself. Intelligence tells you
+                that a specific threat actor group has been using that IP to target the SWIFT infrastructure
+                of European banks over the past 30 days, with a 70% success rate against institutions lacking
+                MFA on privileged accounts.
+            </p>
+        </div>
+
+        <h2>The role of the CTA team</h2>
+
+        <p>
+            At a high level, the CTA team sifts through all available reporting to determine which cyber threats
+            present the most significant risk to the firm. This is harder than it sounds. The volume of threat
+            reporting from vendors, government partners, and open sources is enormous — and most of it is irrelevant
+            to any given institution's specific environment, assets, and risk profile.
+        </p>
+
+        <p>The firm's Threat Intelligence Standard shapes CTA's work around several objectives:</p>
+
+        <ul>
+            <li>Enable decisions about cybersecurity controls based on specific threat actor TTPs</li>
+            <li>Guide collection toward threats posing the highest risk to the firm</li>
+            <li>Ensure intelligence meets standards for timeliness, relevance, and usability</li>
+            <li>Increase sector-wide preparedness and help actively detect and block threats</li>
+            <li>Support law enforcement efforts to deter cybercriminals in the financial sector</li>
+        </ul>
+
+        <p>
+            The concept of <strong>Priority Intelligence Requirements (PIRs)</strong> is central here.
+            These are the critical questions leadership needs answered first — the intelligence gaps that, if
+            left unfilled, would leave decision-makers flying blind on the most consequential risks.
+            <strong>Collection Management</strong> is then the process of directing resources to answer those questions.
+        </p>
+
+        <h2>TTPs: how attackers operate, not just what they use</h2>
+
+        <p>
+            CTA teams focus heavily on <strong>Tactics, Techniques, and Procedures (TTPs)</strong> — the behavioral
+            fingerprints of threat actors. This is a deliberate choice. Indicators like IP addresses and file hashes
+            change constantly; a sophisticated adversary rotates infrastructure daily. TTPs are far more durable.
+            A threat actor's preferred method for achieving persistence on Windows systems won't change just because
+            they got a new server.
+        </p>
+
+        <p>Intelligence on TTPs flows through a structured feedback loop:</p>
+
+        <div class="workflow">
+            <div class="workflow-step">
+                <span class="step-num">01</span>
+                <div class="step-content"><strong>TTPs Identified</strong> — CTA identifies a new attack technique from vendor reports, open sources, or partner sharing</div>
+            </div>
+            <div class="workflow-step">
+                <span class="step-num">02</span>
+                <div class="step-content"><strong>Hunt Team Verifies</strong> — The hunt team tests whether existing controls detect or respond to that TTP in the firm's actual environment</div>
+            </div>
+            <div class="workflow-step">
+                <span class="step-num">03a</span>
+                <div class="step-content"><strong>Controls work ✓</strong> — TTPs are handed off to Detection Engineering to write formal detection rules</div>
+            </div>
+            <div class="workflow-step">
+                <span class="step-num">03b</span>
+                <div class="step-content"><strong>Controls don't work ✗</strong> — CTA re-assesses the threat level; the risk rating is updated and leadership is notified of the detection gap</div>
+            </div>
+        </div>
+
+        <h3>A concrete example: LockBit targeting financial institutions</h3>
+
+        <p>
+            CTA reads a CrowdStrike report indicating LockBit is using a scheduled task to maintain persistence
+            after initial access into financial firms:
+        </p>
+
+        <div class="code-block">
+            <code>$taskPrincipal = New-ScheduledTaskPrincipal -UserId 'CORPORATE_DOMAIN\user01' -RunLevel Highest</code>
+        </div>
+
+        <p>
+            The hunt team goes into the firm's environment and simulates this technique. If the EDR flags it,
+            Detection Engineering writes a formal rule: <em>"Alert whenever a scheduled task is created with
+            RunLevel Highest by a non-admin user."</em> If the EDR misses it, LockBit's threat rating goes up
+            and there's now a documented gap in the firm's defenses.
+        </p>
+
+        <p>
+            One threat intel report on a ransomware group either produces a new detection protecting the bank,
+            or raises an alarm that existing defenses are insufficient. That's the bridge between intelligence
+            and defensive operations.
+        </p>
+
+        <h2>MITRE ATT&CK: the shared language</h2>
+
+        <p>
+            The <strong>MITRE ATT&CK Matrix</strong> is the industry-standard taxonomy for mapping and sharing
+            threat intelligence. Updated at least annually with industry input, it covers platform-specific
+            matrices for Windows, macOS, Linux, cloud, and mobile environments.
+        </p>
+
+        <p>
+            CTA teams populate and maintain these matrices as new intelligence is discovered. The matrix creates
+            a common language that allows intelligence to be shared across institutions, sectors, and with law
+            enforcement — you can describe a threat actor's behavior in a way that any security team globally
+            can immediately understand and act on.
+        </p>
+
+        <h2>Information sharing: the financial sector's network effect</h2>
+
+        <p>
+            No single institution can see the full threat landscape. Adversaries who fail against one bank
+            often pivot to another. The financial sector has built formal sharing structures to address this:
+        </p>
+
+        <ul>
+            <li><strong>FS-ISAC</strong> (Financial Services Information Sharing and Analysis Center) — the primary sector-wide intelligence sharing hub</li>
+            <li><strong>ARC</strong> (Analysis and Resilience Center for Systemic Risk) — focused on systemic risk to the financial system</li>
+            <li>Government partners — including law enforcement and national cybersecurity agencies</li>
+        </ul>
+
+        <h2>The dark web as an intelligence source</h2>
+
+        <p>
+            Perhaps the most underappreciated intelligence source for financial sector analysts is the dark web.
+            This is where adversaries operate openly — selling tools, sharing techniques, and sometimes announcing
+            attacks before they happen.
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>What analysts find</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Stolen credentials</td>
+                        <td>Bank login dumps, employee credentials for sale</td>
+                    </tr>
+                    <tr>
+                        <td>Ransomware announcements</td>
+                        <td>Groups like LockBit posting new victims before public disclosure</td>
+                    </tr>
+                    <tr>
+                        <td>Malware for sale</td>
+                        <td>Banking trojans (Emotet, TrickBot) sold in criminal forums</td>
+                    </tr>
+                    <tr>
+                        <td>Threat actor chatter</td>
+                        <td>Forums where criminals discuss targeting specific institutions</td>
+                    </tr>
+                    <tr>
+                        <td>Data leaks</td>
+                        <td>Customer PII, card numbers posted after breaches</td>
+                    </tr>
+                    <tr>
+                        <td>Initial Access Brokers</td>
+                        <td>Criminals selling existing VPN/RDP access into bank networks</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            The operational value is significant. A ransomware group posting "we have access to Bank X" before
+            an attack happens gives the target an early warning window. Credential dumps of employee emails
+            allow forced password resets before attackers can use them. And tracking specific threat actor
+            groups over time — their language, targets, and tools — builds the kind of behavioral profile
+            that makes attribution possible.
+        </p>
+
+        <h3>Tools used for dark web monitoring</h3>
+
+        <div class="tools-grid">
+            <div class="tool-card">
+                <div class="tool-name">Recorded Future</div>
+                <div class="tool-desc">Automated dark web monitoring with broad coverage</div>
+            </div>
+            <div class="tool-card">
+                <div class="tool-name">Flashpoint</div>
+                <div class="tool-desc">Financial sector focused intelligence platform</div>
+            </div>
+            <div class="tool-card">
+                <div class="tool-name">Kela</div>
+                <div class="tool-desc">Tracks cybercriminal forums and communities</div>
+            </div>
+            <div class="tool-card">
+                <div class="tool-name">DarkOwl</div>
+                <div class="tool-desc">Large-scale dark web indexing</div>
+            </div>
+            <div class="tool-card">
+                <div class="tool-name">Manual OSINT</div>
+                <div class="tool-desc">Analysts directly browsing Tor forums for context no automated tool captures</div>
+            </div>
+        </div>
+
+        <h2>The bigger picture</h2>
+
+        <p>
+            What makes a financial institution's CTI program effective is the same thing that makes any
+            intelligence program effective: the discipline to distinguish between data and analysis, the
+            organizational structures to act on what the analysis reveals, and the humility to recognize
+            that the adversary is also learning.
+        </p>
+
+        <p>
+            The CTA team's job is not to collect everything — it's to tell decision-makers what matters, why,
+            and what to do about it. That's a fundamentally different problem from building detection rules
+            or patching vulnerabilities, and it requires a fundamentally different kind of thinking.
+        </p>
+
+    </div>
+
+    <div class="article-footer">
+        <a href="index.html#blog">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            All writings
+        </a>
+        <span style="font-family: var(--font-mono); font-size: 12px; color: var(--slate);">April 28, 2026</span>
+    </div>
+</div>
+
+<footer>
+    <p>Alicja Grochocka-Dorocinska • © 2026</p>
+</footer>
+
+</body>
+</html>
